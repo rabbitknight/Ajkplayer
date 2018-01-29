@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    tools:context="cc.hobot.viewtest.MainActivity"
+    >
+
+    <cc.hobot.viewtest.widget.media.IjkVideoView
+        android:id="@+id/ijk_IVV"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </cc.hobot.viewtest.widget.media.IjkVideoView>
+    <TableLayout
+        android:id="@+id/table_tl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </TableLayout>
+
+</RelativeLayout>
