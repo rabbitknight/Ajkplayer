@@ -7,16 +7,18 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.TableLayout;
+import android.widget.FrameLayout;
+import android.widget.MediaController;
 
-import cc.hobot.viewtest.widget.media.IjkVideoView;
-import tv.danmaku.ijk.media.player.IjkLibLoader;
+import java.io.IOException;
+
+import cc.hobot.viewtest.widget.Ajkplayer;
+import cc.hobot.viewtest.widget.IjkplayerBuilder;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
 public class MainActivity extends AppCompatActivity {
-    private IjkVideoView ijkVideo;
-    private TableLayout tableLayout;
+    private Ajkplayer ajkplayer;
+    //private TableLayout tableLayout;
 
     private static final String TAG = "MainActivity";
 
@@ -24,14 +26,27 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ijkVideo = findViewById(R.id.ijk_IVV);
-        tableLayout = findViewById(R.id.table_tl);
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
-        IjkMediaPlayer ijkMediaPlayer = new IjkMediaPlayer();
-        //ijkVideo.setHudView(tableLayout);
-        //ijkVideo.setVideoURI(Uri.parse("http://vod.cntv.lxdns.com/flash/mp4video61/TMS/2017/08/17/63bf8bcc706a46b58ee5c821edaee661_h264818000nero_aac32-5.mp4"));
-        //ijkVideo.start();
+        ajkplayer = findViewById(R.id.ijk_player);
+        ajkplayer.setSource("http://vod.cntv.lxdns.com/flash/mp4video61/TMS/2017/08/17/63bf8bcc706a46b58ee5c821edaee661_h264818000nero_aac32-5.mp4",Ajkplayer.FLAG_URL);
+        ajkplayer.recreate();
+        ajkplayer.start();
+        ajkplayer.addListener(new Ajkplayer.OnStartListener() {
+            @Override
+            public void onStart() {
+                Log.i(TAG, "onStart: ");
+            }
+        });
+        ajkplayer.addListener(new Ajkplayer.OnPauseListener() {
+            @Override
+            public void onPause() {
+                Log.i(TAG, "onPause: ");
+            }
+        });
+
+
 
     }
+
 }

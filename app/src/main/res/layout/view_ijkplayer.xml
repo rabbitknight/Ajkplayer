@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextureView
+        android:id="@+id/player_texture"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    </TextureView>
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar_tb"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/ijk_transparent_dark">
+
+        <ImageButton
+            android:id="@+id/back_ib"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_back_24dp" />
+
+        <TextView
+            android:id="@+id/title_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="#ffff"
+            android:textSize="18sp"
+            tools:text="这里是标题" />
+    </android.support.v7.widget.Toolbar>
+
+    <android.support.v7.widget.AppCompatSeekBar
+        android:layout_above="@+id/ctl_rl"
+        android:id="@+id/seek_sb"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:thumb="@drawable/ic_play_12dp"
+        />
+    <RelativeLayout
+        android:id="@+id/ctl_rl"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_alignParentBottom="true">
+
+
+        <ImageButton
+            android:id="@+id/switch_ib"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/ic_pause_24dp" />
+
+        <TextView
+            android:id="@+id/progress_tv"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_toEndOf="@id/switch_ib"
+            android:layout_toRightOf="@id/switch_ib"
+            android:gravity="center"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp"
+            tools:text="00:00:42/00:16:17" />
+        <ImageButton
+            android:id="@+id/full_ib"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:layout_marginEnd="10dp"
+            android:background="@drawable/ic_fullscreen_24dp"
+            />
+
+    </RelativeLayout>
+</RelativeLayout>

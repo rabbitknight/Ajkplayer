@@ -1,5 +1,6 @@
 package cc.hobot.viewtest.widget;
 
+import android.content.Context;
 import android.view.ViewGroup;
 
 import java.lang.ref.WeakReference;
@@ -17,12 +18,27 @@ import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
 public class IjkplayerBuilder {
 
-    private WeakReference<ViewGroup> mHookParent; //
+    private WeakReference<ViewGroup> mHookParent;
+    private WeakReference<Context> mContext;
     private int mHeight;
     private int mWidth;
     private String url;
-    private List<Listener> listeners = new ArrayList<>();
+    private List<Ajkplayer.Listener> listeners = new ArrayList<>();
     // 参数option
+
+
+    /**
+     * 设置上下文
+     *
+     * @param context 上下文
+     * @return
+     */
+    public IjkplayerBuilder with(Context context) {
+        if (null != context) {
+            mContext = new WeakReference<Context>(context);
+        }
+        return this;
+    }
 
     /**
      * 设置播放源
@@ -30,7 +46,7 @@ public class IjkplayerBuilder {
      * @param url 链接
      * @return
      */
-    public IjkplayerBuilder setUrl(String url) {
+    public IjkplayerBuilder load(String url) {
         this.url = url;
         return this;
     }
@@ -41,10 +57,19 @@ public class IjkplayerBuilder {
      * @param listener 监听器
      * @return this
      */
-    public IjkplayerBuilder addListener(Listener listener) {
+    public IjkplayerBuilder listener(Ajkplayer.Listener listener) {
         listeners.add(listener);
         return this;
     }
+
+    /**
+     * 相关配置
+     * @return
+     */
+    public IjkplayerBuilder option() {
+        return this;
+    }
+
 
     /**
      * 勾住父布局！
@@ -52,50 +77,20 @@ public class IjkplayerBuilder {
      * @param parent 播放器要填充进的布局
      * @return this
      */
-    public IjkplayerBuilder hook(ViewGroup parent) {
+    public IjkplayerBuilder target(ViewGroup parent) {
         mHookParent = new WeakReference<ViewGroup>(parent);
         mHeight = mHookParent.get().getHeight();
         mWidth = mHookParent.get().getWidth();
         return this;
     }
-
     /**
      * Build模式。创建出来播放器。
      *
      * @return
      */
     public Ajkplayer build() {
-        return new Ajkplayer();
+        return new Ajkplayer(null);
     }
 
-    //**************************************
-
-    /**
-     * 抽象接口
-     */
-    private interface Listener {
-
-    }
-
-    /**
-     * 暂停
-     */
-    public interface OnPauseListener extends Listener {
-        void onPause();
-    }
-
-    /**
-     * 开始
-     */
-    public interface OnStartListener extends Listener {
-        void onStart();
-    }
-
-    /**
-     * 结束
-     */
-    public interface OnEndListener extends Listener {
-        void onEnd();
-    }
 
 }
