@@ -1,29 +1,45 @@
 package cc.hobot.viewtest.widget;
 
+import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.AppCompatSeekBar;
 import android.support.v7.widget.Toolbar;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import cc.hobot.viewtest.R;
+import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
+import tv.danmaku.ijk.media.player.IjkTimedText;
 
 /**
  * Created by zhuo.chen on 2018/1/29.
@@ -44,7 +60,91 @@ public class Ajkplayer extends FrameLayout {
     private SurfaceTexture mSurfaceTexture;
     private TextureView.SurfaceTextureListener mTextureListener;
     private SurfaceView mSurfaceView;
-    private AjkplayerListener mListener;
+    private static Timer timer;
+    private static Handler handler;
+    // 播放器专注于播放逻辑，并不关心自身生命周期，生命周期处理，交给Builder处理
+    //private Application.ActivityLifecycleCallbacks acticityLifecycleCallbacks;
+    //private FragmentManager.FragmentLifecycleCallbacks fragmentLifecycleCallbacks;
+
+    private AjkplayerListener mListener = new AjkplayerListener() {
+        @Override
+        public void onPrepared(IMediaPlayer iMediaPlayer) {
+            super.onPrepared(iMediaPlayer);
+            duration = mediaPlayer.getDuration();
+            Log.d(TAG, "onPrepared: duration=" + mediaPlayer.getDuration() +
+                    ",seekDuration=" + mediaPlayer.getSeekLoadDuration() +
+                    ",audioDuration=" + mediaPlayer.getAudioCachedDuration() +
+                    ",videoDuration=" + mediaPlayer.getVideoCachedDuration());
+        }
+
+        @Override
+        public boolean onInfo(IMediaPlayer iMediaPlayer, int i, int i1) {
+            Log.d(TAG, "onInfo: " + i + "," + i1 + "," + iMediaPlayer.getDuration());
+            return super.onInfo(iMediaPlayer, i, i1);
+        }
+
+        @Override
+        public void onTimedText(IMediaPlayer iMediaPlayer, IjkTimedText ijkTimedText) {
+            super.onTimedText(iMediaPlayer, ijkTimedText);
+            Log.d(TAG, "onTimedText: " + ijkTimedText);
+        }
+
+        @Override
+        public void onBufferingUpdate(IMediaPlayer iMediaPlayer, int i) {
+            super.onBufferingUpdate(iMediaPlayer, i);
+            Log.d(TAG, "onBufferingUpdate: " + i + "," + mediaPlayer.getSeekLoadDuration());
+            Log.d(TAG, "onBufferingUpdate: duration=" + mediaPlayer.getDuration() +
+                    ",seekDuration=" + mediaPlayer.getSeekLoadDuration() +
+                    ",audioDuration=" + mediaPlayer.getAudioCachedDuration() +
+                    ",videoDuration=" + mediaPlayer.getVideoCachedDuration() +
+                    ",currentPos" + mediaPlayer.getCurrentPosition());
+
+        }
+
+        @Override
+        public boolean onNativeInvoke(int i, Bundle bundle) {
+            Log.d(TAG, "onNativeInvoke: " + i + "," + bundle);
+            return super.onNativeInvoke(i, bundle);
+        }
+
+        @Override
+        public String onControlResolveSegmentUrl(int i) {
+            Log.d(TAG, "onControlResolveSegmentUrl: " + i);
+            return super.onControlResolveSegmentUrl(i);
+        }
+
+        @Override
+        public void onCompletion(IMediaPlayer iMediaPlayer) {
+            super.onCompletion(iMediaPlayer);
+            Log.d(TAG, "onCompletion: ");
+        }
+
+        @Override
+        public boolean onError(IMediaPlayer iMediaPlayer, int i, int i1) {
+            Log.d(TAG, "onError: " + i + "," + i1);
+            return super.onError(iMediaPlayer, i, i1);
+        }
+
+        @Override
+        public void onSeekComplete(IMediaPlayer iMediaPlayer) {
+            super.onSeekComplete(iMediaPlayer);
+            Log.d(TAG, "onSeekComplete: ");
+
+        }
+
+        @Override
+        public void onVideoSizeChanged(IMediaPlayer iMediaPlayer, int i, int i1, int i2, int i3) {
+            super.onVideoSizeChanged(iMediaPlayer, i, i1, i2, i3);
+            Log.d(TAG, "onVideoSizeChanged: " + i + "," + i1 + "," + i2 + "," + i3);
+        }
+
+        @Override
+        public String onMediaCodecSelect(IMediaPlayer iMediaPlayer, String s, int i, int i1) {
+            Log.d(TAG, "onMediaCodecSelect: " + s + "," + i + "," + i1);
+            return super.onMediaCodecSelect(iMediaPlayer, s, i, i1);
+
+        }
+    };
 
     private View contentView;
     private TextureView displayView;
@@ -57,11 +157,15 @@ public class Ajkplayer extends FrameLayout {
     private TextView progressTv;
     private ImageButton fullIb;
 
+    private ViewGroup fullParent;
+
     private SparseArray<Listener> events = new SparseArray<>();
 
 
     private int dataFlag = 0;
     private String dataSource;
+    private long duration;
+    private boolean isMax = false;
 
     public Ajkplayer(Context context) {
         this(context, null);
@@ -76,21 +180,165 @@ public class Ajkplayer extends FrameLayout {
         init();
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        Log.d(TAG, "onTouchEvent: " + event);
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_UP:
+                handler.sendMessageDelayed(handler.obtainMessage(120), 3000);
+                Log.d(TAG, "onTouch: +ACTION_UP");
+                return false;
+            case MotionEvent.ACTION_DOWN:
+                handler.removeMessages(120);
+                Log.d(TAG, "onTouch: +ACTION_DOWN");
+                ctlRl.setVisibility(VISIBLE);
+                toolbar.setVisibility(VISIBLE);
+                return false;
+        }
+        return super.onTouchEvent(event);
+
+    }
 
     private void init() {
-        contentView = LayoutInflater.from(getContext()).inflate(R.layout.view_ijkplayer, this);
-        displayView = findViewById(R.id.player_texture);
-        toolbar = findViewById(R.id.toolbar_tb);
-        backIb = findViewById(R.id.back_ib);
-        titleTv = findViewById(R.id.title_tv);
-        ctlRl = findViewById(R.id.ctl_rl);
-        seekSb = findViewById(R.id.seek_sb);
-        switchIb = findViewById(R.id.switch_ib);
-        progressTv = findViewById(R.id.progress_tv);
-        fullIb = findViewById(R.id.full_ib);
+        fullParent = ((Activity) this.getContext()).findViewById(Window.ID_ANDROID_CONTENT);
+        Log.d(TAG, "init: " + fullParent);
 
-
+        contentView = LayoutInflater.from(getContext()).inflate(R.layout.view_ijkplayer, null);
+        this.addView(contentView);
+        displayView = contentView.findViewById(R.id.player_texture);
+        toolbar = contentView.findViewById(R.id.toolbar_tb);
+        backIb = contentView.findViewById(R.id.back_ib);
+        titleTv = contentView.findViewById(R.id.title_tv);
+        ctlRl = contentView.findViewById(R.id.ctl_rl);
+        seekSb = contentView.findViewById(R.id.seek_sb);
+        switchIb = contentView.findViewById(R.id.switch_ib);
+        progressTv = contentView.findViewById(R.id.progress_tv);
+        fullIb = contentView.findViewById(R.id.full_ib);
+        contentView.requestFocus();
         initTexture();
+        // 进度
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (null != mediaPlayer && mediaPlayer.isPlaying()) {
+                    Message msg = new Message();
+                    msg.what = 110;
+                    Bundle bundle = new Bundle();
+                    bundle.putLong("time", mediaPlayer.getCurrentPosition());
+                    msg.setData(bundle);
+                    handler.sendMessage(msg);
+                }
+            }
+        }, 0, 1000);
+        handler = new Handler(getContext().getMainLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                if (110 == msg.what) {
+                    progressTv.setText(String.valueOf(convertTime(msg.getData().getLong("time", -1)) + "/" + convertTime(duration)));
+                    if (0 != (msg.getData().getLong("time")) && 0 != duration) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            // TODO: 2018/1/31 crash
+                            seekSb.setProgress((int) (msg.getData().getLong("time") * 100 / duration), true);
+                            Log.d(TAG, "handleMessage: " + msg.getData().getLong("time") * 100 / duration);
+                        } else {
+                            seekSb.setProgress((int) (msg.getData().getLong("time") * 100 / duration));
+                        }
+                    }
+
+                } else if (120 == msg.what) {
+                    ctlRl.setVisibility(GONE);
+                    toolbar.setVisibility(GONE);
+                }
+
+            }
+        };
+
+        // 组件
+        seekSb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Log.d(TAG, "onProgressChanged: " + progress + "," + fromUser);
+                if (null != mediaPlayer) {
+                    progressTv.setText(String.valueOf(convertTime(progress * duration / 100) + "/" + convertTime(duration)));
+                }
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                Log.d(TAG, "onStartTrackingTouch: ");
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                Log.d(TAG, "onStopTrackingTouch: " + seekBar.getProgress());
+                if (null != mediaPlayer) {
+                    Log.d(TAG, "onStopTrackingTouch: " + seekBar.getProgress() * duration / 100);
+                    seekTo(seekBar.getProgress() * duration / 100);
+                }
+            }
+        });
+
+        switchIb.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (null != mediaPlayer) {
+                    if (mediaPlayer.isPlaying()) {
+                        switchIb.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_play_24dp));
+                        pause();
+                        seekSb.setThumb(ContextCompat.getDrawable(getContext(), R.drawable.ic_star_off));
+                    } else {
+                        switchIb.setImageDrawable(ContextCompat.getDrawable(getContext(), R.drawable.ic_pause));
+                        start();
+                        seekSb.setThumb(ContextCompat.getDrawable(getContext(), R.drawable.ic_star));
+                    }
+                }
+            }
+        });
+        backIb.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO: 2018/1/31 预留
+            }
+        });
+        fullIb.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!isMax) {
+                    Log.d(TAG, "onClick: ");
+                    setMax();
+                } else {
+                    setMin();
+                }
+            }
+        });
+
+
+        //setMax();
+    }
+
+    // 全屏
+    private void setMax() {
+        ViewGroup parent = (ViewGroup) contentView.getParent();
+        if (null != parent) {
+            parent.removeView(contentView);
+            Log.d(TAG, "setMax: " + parent);
+        }
+        fullParent.addView(contentView);
+        isMax = true;
+    }
+
+    private void setMin() {
+        ViewGroup parent = (ViewGroup) contentView.getParent();
+        if (null != parent) {
+            parent.removeView(contentView);
+            Log.d(TAG, "setMin: " + parent);
+        }
+        this.addView(contentView);
+        isMax = false;
     }
 
     public void initTexture() {
@@ -119,9 +367,7 @@ public class Ajkplayer extends FrameLayout {
             }
         };
         displayView.setSurfaceTextureListener(mTextureListener);
-
     }
-
 
     // 事件
     public void addListener(Listener listener) {
@@ -143,8 +389,14 @@ public class Ajkplayer extends FrameLayout {
     public void start() {
         if (null != mediaPlayer) {
             mediaPlayer.start();
+            Log.d(TAG, "start: duration=" + mediaPlayer.getDuration() +
+                    ",seekDuration=" + mediaPlayer.getSeekLoadDuration() +
+                    ",audioDuration=" + mediaPlayer.getAudioCachedDuration() +
+                    ",videoDuration=" + mediaPlayer.getVideoCachedDuration());
+
             if (null != events.get(TYPE_LIS_START)) {
                 ((OnStartListener) events.get(TYPE_LIS_START)).onStart();
+
             }
         }
     }
@@ -238,7 +490,32 @@ public class Ajkplayer extends FrameLayout {
         }
     }
 
+    public void setTitle(String title) {
+        titleTv.setText(title);
+    }
 
+    /**
+     * time转化类
+     * 179000 -> 00:02:59
+     *
+     * @param time 179000
+     * @return 00:02:59
+     */
+    private String convertTime(long time) {
+        long h = -1;  // 时
+        long m = -1;  // 分
+        long s = -1;  // 喵
+
+        s = time / 1000 % 60;
+        m = time / 1000 / 60 % 60;
+        h = time / 1000 / 3600;
+
+        return String.valueOf(h) +
+                ":" +
+                (m < 10 ? "0" + m : m) +
+                ":" +
+                (s < 10 ? "0" + s : s);
+    }
     //**************************************
 
     /**

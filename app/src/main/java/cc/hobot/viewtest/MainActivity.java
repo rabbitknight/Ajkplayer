@@ -29,9 +29,10 @@ public class MainActivity extends AppCompatActivity {
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
         ajkplayer = findViewById(R.id.ijk_player);
-        ajkplayer.setSource("http://vod.cntv.lxdns.com/flash/mp4video61/TMS/2017/08/17/63bf8bcc706a46b58ee5c821edaee661_h264818000nero_aac32-5.mp4",Ajkplayer.FLAG_URL);
+        ajkplayer.setSource("http://baobab.kaiyanapp.com/api/v1/playUrl?vid=14914&editionType=default&source=ucloud",Ajkplayer.FLAG_URL);
         ajkplayer.recreate();
         ajkplayer.start();
+        ajkplayer.setTitle("一个简单的播放器");
         ajkplayer.addListener(new Ajkplayer.OnStartListener() {
             @Override
             public void onStart() {

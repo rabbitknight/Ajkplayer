@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:focusable="true">
 
     <TextureView
         android:id="@+id/player_texture"
@@ -16,13 +18,15 @@
         android:id="@+id/toolbar_tb"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/ijk_transparent_dark">
+        android:background="@color/ijk_transparent_dark"
+        android:fitsSystemWindows="true"
+        >
 
         <ImageButton
             android:id="@+id/back_ib"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/ic_back_24dp" />
+            android:background="@drawable/ic_back" />
 
         <TextView
             android:id="@+id/title_tv"
@@ -41,23 +45,26 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
-        android:thumb="@drawable/ic_play_12dp"
+        android:thumb="@drawable/ic_star"
+        android:layout_alignWithParentIfMissing="true"
         />
     <RelativeLayout
         android:id="@+id/ctl_rl"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:background="@color/ijk_transparent_dark">
 
 
         <ImageButton
             android:id="@+id/switch_ib"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
             android:layout_centerVertical="true"
             android:layout_marginLeft="10dp"
             android:layout_marginStart="10dp"
-            android:background="@drawable/ic_pause_24dp" />
+            android:src="@drawable/ic_pause"
+            android:background="@null"/>
 
         <TextView
             android:id="@+id/progress_tv"
@@ -81,7 +88,7 @@
             android:layout_centerVertical="true"
             android:layout_marginRight="10dp"
             android:layout_marginEnd="10dp"
-            android:background="@drawable/ic_fullscreen_24dp"
+            android:background="@drawable/ic_fullscreen"
             />
 
     </RelativeLayout>
