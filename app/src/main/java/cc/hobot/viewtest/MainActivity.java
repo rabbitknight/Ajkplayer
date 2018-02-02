@@ -26,10 +26,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        IjkMediaPlayer.loadLibrariesOnce(null);
-        IjkMediaPlayer.native_profileBegin("libijkplayer.so");
+
         ajkplayer = findViewById(R.id.ijk_player);
-        ajkplayer.setSource("http://baobab.kaiyanapp.com/api/v1/playUrl?vid=14914&editionType=default&source=ucloud",Ajkplayer.FLAG_URL);
+        //ajkplayer.setSource("http://aweme.snssdk.com/aweme/v1/play/?video_id=1f30704c441f482bb062f94eb9898f66&line=0&ratio=720p&media_type=4&vr_type=0",Ajkplayer.FLAG_URL);
+        ajkplayer.setSource("http://baobab.kaiyanapp.com/api/v1/playUrl?vid=35229&editionType=normal&source=aliyun",Ajkplayer.FLAG_URL);
         ajkplayer.recreate();
         ajkplayer.start();
         ajkplayer.setTitle("一个简单的播放器");

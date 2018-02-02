@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="300dp"
+    android:layout_height="match_parent"
     android:orientation="horizontal"
     tools:context="cc.hobot.viewtest.MainActivity"
     android:background="@color/ijk_color_blue_main"
@@ -12,7 +12,7 @@
     <cc.hobot.viewtest.widget.Ajkplayer
         android:id="@+id/ijk_player"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="300dp"
         android:background="@color/ijk_color_blue_50">
 
     </cc.hobot.viewtest.widget.Ajkplayer>

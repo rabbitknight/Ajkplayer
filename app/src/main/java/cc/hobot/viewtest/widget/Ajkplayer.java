@@ -13,6 +13,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.AppCompatSeekBar;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
@@ -56,12 +57,17 @@ public class Ajkplayer extends FrameLayout {
     public static final int TYPE_LIS_PAUSE = 4 * 1024;
     public static final int TYPE_LIS_END = 8 * 1024;
 
+    private int mWdith = -1;
+    private int mHeight = -1;
+    private int mRotation;
+
     private IjkMediaPlayer mediaPlayer;
     private SurfaceTexture mSurfaceTexture;
     private TextureView.SurfaceTextureListener mTextureListener;
     private SurfaceView mSurfaceView;
     private static Timer timer;
     private static Handler handler;
+
     // 播放器专注于播放逻辑，并不关心自身生命周期，生命周期处理，交给Builder处理
     //private Application.ActivityLifecycleCallbacks acticityLifecycleCallbacks;
     //private FragmentManager.FragmentLifecycleCallbacks fragmentLifecycleCallbacks;
@@ -71,15 +77,28 @@ public class Ajkplayer extends FrameLayout {
         public void onPrepared(IMediaPlayer iMediaPlayer) {
             super.onPrepared(iMediaPlayer);
             duration = mediaPlayer.getDuration();
-            Log.d(TAG, "onPrepared: duration=" + mediaPlayer.getDuration() +
+            // 拿到宽高
+            mWdith = mediaPlayer.getVideoWidth();
+            mHeight = mediaPlayer.getVideoHeight();
+            Log.d(TAG, "onPrepared: duration=" + iMediaPlayer.getDuration() +
                     ",seekDuration=" + mediaPlayer.getSeekLoadDuration() +
                     ",audioDuration=" + mediaPlayer.getAudioCachedDuration() +
-                    ",videoDuration=" + mediaPlayer.getVideoCachedDuration());
+                    ",videoDuration=" + mediaPlayer.getVideoCachedDuration() +
+                    ",mWidth=" + mediaPlayer.getVideoWidth() +
+                    ",mHeight=" + mediaPlayer.getVideoHeight());
+            reSize(getWidth(),getHeight());
         }
 
         @Override
         public boolean onInfo(IMediaPlayer iMediaPlayer, int i, int i1) {
             Log.d(TAG, "onInfo: " + i + "," + i1 + "," + iMediaPlayer.getDuration());
+            if (i == IMediaPlayer.MEDIA_INFO_VIDEO_ROTATION_CHANGED) {
+                //这里返回了视频旋转的角度，根据角度旋转视频到正确的画面
+                mRotation = i1;
+                if (displayView != null)
+                    displayView.setRotation(mRotation);
+            }
+
             return super.onInfo(iMediaPlayer, i, i1);
         }
 
@@ -183,7 +202,6 @@ public class Ajkplayer extends FrameLayout {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         Log.d(TAG, "onTouchEvent: " + event);
-
         switch (event.getAction()) {
             case MotionEvent.ACTION_UP:
                 handler.sendMessageDelayed(handler.obtainMessage(120), 3000);
@@ -200,7 +218,11 @@ public class Ajkplayer extends FrameLayout {
 
     }
 
+    // initial
     private void init() {
+        IjkMediaPlayer.loadLibrariesOnce(null);
+        IjkMediaPlayer.native_profileBegin("libijkplayer.so");
+
         fullParent = ((Activity) this.getContext()).findViewById(Window.ID_ANDROID_CONTENT);
         Log.d(TAG, "init: " + fullParent);
 
@@ -309,15 +331,56 @@ public class Ajkplayer extends FrameLayout {
             public void onClick(View v) {
                 if (!isMax) {
                     Log.d(TAG, "onClick: ");
+                    fullIb.setBackgroundResource(R.drawable.ic_unfull);
                     setMax();
                 } else {
                     setMin();
+                    fullIb.setBackgroundResource(R.drawable.ic_fullscreen);
                 }
             }
         });
 
+        // 尺寸
 
-        //setMax();
+    }
+
+    public void reSize(int targetWidth, int targetHeight) {
+        if (null == displayView) {
+            return ;
+        }
+        //int width = displayView.getWidth();
+        //int height = displayView.getHeight();
+        ViewGroup.LayoutParams params = displayView.getLayoutParams();
+
+        Log.d(TAG, "reSize: " + targetWidth + "," + targetHeight + "," + mWdith + "," + mHeight);
+        if (-1 != mWdith && -1 != mHeight) {
+            if (targetWidth * mHeight < mWdith * targetHeight) {    // 目标区域过高
+                // 以宽度为准
+                if (mHeight > targetWidth) {  // 视频高度大于实际高度
+                    params.width = targetWidth;
+                    params.height = mHeight * targetWidth / mWdith;
+                } else if (mHeight < targetWidth) { // 视频高度小于实际高度
+                    params.width = targetWidth;
+                    params.height = mHeight * targetWidth / mWdith;
+                }
+                displayView.setLayoutParams(params);
+                Log.d(TAG, "reSize+11: " + params.width + "," + params.height);
+                Log.d(TAG, "reSize+1: " + displayView.getWidth() + "," + displayView.getHeight());
+            } else if (targetWidth * mHeight > mWdith * targetHeight) { // 目标区域过宽
+                // 以高度为准
+                if (mWdith > targetWidth) { //视频宽度大于实际宽度
+                    params.height = targetHeight;
+                    params.width = mWdith * targetHeight / mHeight;
+                } else if (mWdith < targetWidth) {
+                    params.height = targetHeight;
+                    params.width = mWdith * targetHeight / mHeight;
+                }
+                displayView.setLayoutParams(params);
+                Log.d(TAG, "reSize+22: " + params.width + "," + params.height);
+                Log.d(TAG, "reSize+2: " + displayView.getWidth() + "," + displayView.getHeight());
+            }
+
+        }
     }
 
     // 全屏
@@ -327,8 +390,10 @@ public class Ajkplayer extends FrameLayout {
             parent.removeView(contentView);
             Log.d(TAG, "setMax: " + parent);
         }
+        reSize(fullParent.getWidth(), fullParent.getHeight());
         fullParent.addView(contentView);
         isMax = true;
+        Log.d(TAG, "setMax: " + displayView.getHeight() + "," + displayView.getWidth());
     }
 
     private void setMin() {
@@ -337,6 +402,7 @@ public class Ajkplayer extends FrameLayout {
             parent.removeView(contentView);
             Log.d(TAG, "setMin: " + parent);
         }
+        reSize(getWidth(), getHeight());
         this.addView(contentView);
         isMax = false;
     }
@@ -353,7 +419,7 @@ public class Ajkplayer extends FrameLayout {
 
             @Override
             public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-
+                Log.d(TAG, "onSurfaceTextureSizeChanged: " + width + "," + height);
             }
 
             @Override
