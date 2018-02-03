@@ -16,5 +16,22 @@
 
     <color name="ijk_transparent_dark">#77000000</color>
     <color name="ijk_color_bg_dark">#ff000000</color>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="colorMainRed">#D32F2F</color>
+    <color name="colorLightRed">#F44336</color>
+    <color name="colorMainWhite">#ffffffff</color>
+    <color name="colorMainDark">#212122</color>
+    <color name="colorMainGray">#ff727272</color>
+    <color name="colorTextDark">#212122</color>
+    <color name="colorTextLight">#c0c0c0</color>
+    <color name="colorDividerGray">#f6f6f6</color>
+    <color name="colorAlpha">#00000000</color>
+    <color name="colorAlphaGray">#18727272</color>
+    <color name="colorIndicator">#d97fcac3</color>
+    <color name="colorPadding">#e7eaeaea</color>
+
 
 </resources>
